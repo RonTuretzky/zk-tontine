@@ -15,6 +15,9 @@ jobs:
     with:
       working-directory: contracts
       deploy-on-pr: true
+      # The deploy job runs from the repo root (root foundry.toml points it at
+      # contracts/), so the script path is root-relative.
+      deploy-script: contracts/script/Deploy.s.sol:Deploy
       # etherform's default contract-paths are repo-root-relative; our Foundry
       # project lives under contracts/, so spell them out or change detection
       # never matches and every run skips.
