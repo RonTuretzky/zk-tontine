@@ -15,6 +15,18 @@ jobs:
     with:
       working-directory: contracts
       deploy-on-pr: true
+      # etherform's default contract-paths are repo-root-relative; our Foundry
+      # project lives under contracts/, so spell them out or change detection
+      # never matches and every run skips.
+      contract-paths: |
+        contracts/src/**
+        contracts/script/**
+        contracts/test/**
+        contracts/lib/**
+        contracts/foundry.toml
+        contracts/remappings.txt
+        .github/deploy-networks.json
+        .github/workflows/cicd.yml
     secrets:
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       RPC_URL: ${{ secrets.RPC_URL }}
