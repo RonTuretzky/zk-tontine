@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Body, Caption, LoginButton, Logo } from "@breadcoop/ui"
 import { CaretDown } from "@phosphor-icons/react"
-import { useReadContract } from "wagmi"
+import { useAccount, useDisconnect, useReadContract } from "wagmi"
 import { tontinePoolAbi } from "../../lib/contracts"
 import { useActivePool, type PoolInfo } from "../../lib/pools"
 import { fmtCountdown, fmtXdai } from "../util"
@@ -73,7 +73,7 @@ export function AppShell() {
             ))}
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <LoginButton />
+            <WalletButton />
           </div>
         </nav>
         {/* Mobile tab row */}
@@ -116,6 +116,29 @@ export function AppShell() {
       </main>
     </div>
   )
+}
+
+/* The kit's LoginButton renders nothing once connected — wrap it so the
+   connected account stays visible and can sign out. */
+function WalletButton() {
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+  if (isConnected && address) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="border-paper-2 bg-paper-0 rounded-full border px-3 py-1.5 font-mono text-xs">
+          {address.slice(0, 6)}…{address.slice(-4)}
+        </span>
+        <button
+          onClick={() => disconnect()}
+          className="text-surface-grey-2 hover:text-core-orange text-xs font-semibold underline"
+        >
+          Sign out
+        </button>
+      </div>
+    )
+  }
+  return <LoginButton />
 }
 
 function CircleSwitcher({
