@@ -33,3 +33,6 @@ jobs:
     secrets:
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       RPC_URL: ${{ secrets.RPC_URL }}
+      # WXDAI/SDAI/DEMO_SETUP for Deploy.s.sol, so PR deploys use the real
+      # Gnosis reserve pair + demo domains instead of fresh mocks.
+      DEPLOY_ENV_VARS: ${{ secrets.DEPLOY_ENV_VARS }}
