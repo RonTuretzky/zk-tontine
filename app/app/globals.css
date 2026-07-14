@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "@breadcoop/ui/theme";
+@import "@rainbow-me/rainbowkit/styles.css";
+
+html {
+  color-scheme: light;
+  background: #f6f3eb;
+}
+
+body {
+  background: #f6f3eb;
+  color: #171414;
+}
+
+/* Lifted-paper card, the Bread kit's signature surface */
+.card {
+  background: #fff;
+  border: 1.5px solid #171414;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 0 #59595955;
+  padding: 1.25rem;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8em;
+  word-break: break-all;
+}
+
+input,
+select {
+  background: #fff;
+  border: 1.5px solid #171414;
+  border-radius: 7px;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid #286b63;
+  outline-offset: 1px;
+}
+
+label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}

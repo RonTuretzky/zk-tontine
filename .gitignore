@@ -1,0 +1,15 @@
+# frontend
+app/node_modules/
+app/.next/
+app/out/
+app/next-env.d.ts
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/31337/
+
+# local
+.context/
+.env
+*.key
