@@ -1,11 +1,11 @@
 "use client"
 
-import { Body, Button, Caption, Chip } from "@breadcoop/ui"
+import { Body, Button, Caption } from "@breadcoop/ui"
 import { zeroAddress } from "viem"
 import { useAccount, useReadContract, useReadContracts } from "wagmi"
 import { ADDRESSES, lifeOracleAbi, tontinePoolAbi } from "../../lib/contracts"
 import type { PoolInfo } from "../../lib/pools"
-import { fmtXdai, shortId } from "../util"
+import { Pill, fmtXdai, shortId } from "../util"
 
 const oracle = { address: ADDRESSES.lifeOracle, abi: lifeOracleAbi } as const
 
@@ -105,7 +105,7 @@ export function OverviewPanel({ pool, goJoin }: { pool: PoolInfo; goJoin: () => 
                         )}
                       </td>
                       <td className="py-3 pr-4">
-                        <Chip size="small">{label}</Chip>
+                        <Pill>{label}</Pill>
                       </td>
                       <td className="py-3 pr-4">{fmtXdai(bal)} xDAI</td>
                       <td className="py-3 pr-4">

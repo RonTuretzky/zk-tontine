@@ -231,7 +231,7 @@ function TakeSeatCard({
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="field-label">
-            Your stake (xDAI) — between {fmtXdai(minJoin as bigint, 0)} and {fmtXdai(maxJoin as bigint, 0)}
+            Your stake (xDAI) — between {fmtXdai(minJoin as bigint)} and {fmtXdai(maxJoin as bigint, 0)}
           </label>
           <input className="field" value={amount} onChange={(e) => setAmount(e.target.value)} />
           <Caption className="text-surface-grey-2 mt-1 block">

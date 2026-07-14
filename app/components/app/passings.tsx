@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Body, Button, Caption, Chip } from "@breadcoop/ui"
+import { Body, Button, Caption } from "@breadcoop/ui"
 import { formatEther } from "viem"
 import { useReadContract, useReadContracts } from "wagmi"
 import { ADDRESSES, lifeOracleAbi, tontinePoolAbi } from "../../lib/contracts"
@@ -12,7 +12,7 @@ import {
   randomDeathEmailNullifier,
 } from "../../lib/demo"
 import type { PoolInfo } from "../../lib/pools"
-import { TxStatus, fmtCountdown, shortId, useTx } from "../util"
+import { Pill, TxStatus, fmtCountdown, shortId, useTx } from "../util"
 
 const oracle = { address: ADDRESSES.lifeOracle, abi: lifeOracleAbi } as const
 
@@ -130,13 +130,13 @@ function OpenMatters({ pool }: { pool: PoolInfo }) {
                 </Caption>
               </div>
               <div className="flex items-center gap-3">
-                <Chip size="small">
+                <Pill>
                   {c.status === 2
                     ? now > c.ends
                       ? "waiting period over"
                       : `open to objection ${fmtCountdown(c.ends)}`
                     : "final — ready to share out"}
-                </Chip>
+                </Pill>
                 {c.status === 2 && now > c.ends && (
                   <Button
                     app="fund"

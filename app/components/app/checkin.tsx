@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Body, Button, Caption, Chip } from "@breadcoop/ui"
+import { Body, Button, Caption } from "@breadcoop/ui"
 import { zeroAddress } from "viem"
 import { useAccount, useReadContract } from "wagmi"
 import { ADDRESSES, lifeOracleAbi } from "../../lib/contracts"
 import { LIFE_DOMAINS, LIFE_PATTERN, mkDemoProof } from "../../lib/demo"
-import { TxStatus, fmtCountdown, shortId, useTx } from "../util"
+import { Pill, TxStatus, fmtCountdown, shortId, useTx } from "../util"
 
 const oracle = { address: ADDRESSES.lifeOracle, abi: lifeOracleAbi } as const
 const ZERO_ID = ("0x" + "0".repeat(64)) as `0x${string}`
@@ -75,13 +75,13 @@ function CheckinCard({ id }: { id: `0x${string}` }) {
           <h2 className="font-breadDisplay text-text-standard text-2xl font-extrabold">
             Your seat
           </h2>
-          <Chip>
+          <Pill tone={reported ? "red" : good ? "green" : "paper"}>
             {reported
               ? "⚠ Someone reported your passing"
               : good
                 ? "✓ Checked in"
                 : "Away — income paused"}
-          </Chip>
+          </Pill>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <Info label="Member card" value={shortId(id)} mono />
@@ -116,7 +116,9 @@ function CheckinCard({ id }: { id: `0x${string}` }) {
           <Caption className="text-surface-grey-2 uppercase">
             This season&apos;s code word — put it in your subject line
           </Caption>
-          <div className="font-mono text-sm break-all">{(nonce as string) ?? "—"}</div>
+          <div className="text-text-standard font-mono text-sm break-all">
+            {(nonce as string) ?? "—"}
+          </div>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>

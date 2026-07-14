@@ -126,7 +126,7 @@ function WalletButton() {
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-2">
-        <span className="border-paper-2 bg-paper-0 rounded-full border px-3 py-1.5 font-mono text-xs">
+        <span className="border-paper-2 bg-paper-0 text-text-standard rounded-full border px-3 py-1.5 font-mono text-xs">
           {address.slice(0, 6)}…{address.slice(-4)}
         </span>
         <button

@@ -56,3 +56,20 @@ export function fmtCountdown(target: number | undefined): string {
 export function shortId(id: string): string {
   return `${id.slice(0, 10)}…${id.slice(-6)}`
 }
+
+/* Reliable status pill (the kit Chip inherits the theme's dark-scheme text
+   color in some contexts). */
+export function Pill({ children, tone = "paper" }: { children: React.ReactNode; tone?: "paper" | "green" | "red" }) {
+  const tones = {
+    paper: "border-paper-2 bg-paper-0 text-text-standard",
+    green: "border-system-green/40 bg-system-green/10 text-text-standard",
+    red: "border-system-red/40 bg-system-red/10 text-text-standard",
+  }
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  )
+}
