@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 /// @notice Uniform zkEmail proof envelope shared by every tontine blueprint.
+///         See docs/SPEC.md §4 for the blueprint table and demo-mode semantics.
 ///         Public signals in circuit order, plus the Groth16 proof points.
 ///
 ///         The three blueprints and what each binds:
