@@ -3,15 +3,15 @@ import "./globals.css"
 import { Providers } from "./providers"
 
 export const metadata: Metadata = {
-  title: "Long Bread — a lifetime income pool you run together",
+  title: "Long Bread — income for life, from a circle of friends",
   description:
-    "A tontine your community runs itself: pooled savings, lifetime income, and life & death verified by cryptographic email proofs — no insurer in the middle.",
+    "A savings circle that pays its members a monthly income for as long as they live. No company in the middle, refundable until the doors close, and the books are public.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-paper-main text-system-ink antialiased">
+      <body className="bg-paper-main min-h-screen antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

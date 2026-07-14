@@ -19,7 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <BreadUIKitProvider
-            app="stacks"
+            app="fund"
             chainId={gnosis.id}
             authProvider="general"
             tokenConfig={{ BREAD: { address: BREAD_TOKEN, abi: erc20Abi } }}

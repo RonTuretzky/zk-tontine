@@ -1,50 +1,75 @@
 @import "tailwindcss";
+
+/* Breadchain design system: tokens, Pogaca @font-face, component classes. */
 @import "@breadcoop/ui/theme";
 @import "@rainbow-me/rainbowkit/styles.css";
 
+/* Keep @breadcoop/ui's prebuilt classes from being purged. */
+@source "../node_modules/@breadcoop/ui";
+
+/* Light app — force the paper background, smooth anchor jumps, and offset
+   anchor targets so section headings don't hide under the sticky nav. */
 html {
   color-scheme: light;
-  background: #f6f3eb;
+  scroll-behavior: smooth;
 }
-
+html,
 body {
-  background: #f6f3eb;
-  color: #171414;
+  background-color: #f6f3eb; /* paper-main */
+}
+:target {
+  scroll-margin-top: 5rem;
 }
 
-/* Lifted-paper card, the Bread kit's signature surface */
-.card {
-  background: #fff;
-  border: 1.5px solid #171414;
-  border-radius: 10px;
-  box-shadow: 4px 4px 0 0 #59595955;
-  padding: 1.25rem;
+@layer base {
+  body {
+    @apply text-text-standard font-breadBody antialiased;
+  }
 }
 
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8em;
-  word-break: break-all;
+@layer components {
+  /* Constrained, centered page gutter used across sections. */
+  .section-container {
+    @apply mx-auto w-full max-w-6xl px-6;
+  }
+
+  /* Form primitives, Bread-styled. */
+  .field {
+    @apply border-paper-2 bg-paper-0 text-text-standard w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none;
+  }
+  .field:focus {
+    @apply border-primary-jade;
+  }
+  .field-label {
+    @apply text-surface-grey-2 mb-1.5 block text-xs font-semibold tracking-wide uppercase;
+  }
 }
 
-input,
-select {
-  background: #fff;
-  border: 1.5px solid #171414;
-  border-radius: 7px;
-  padding: 0.5rem 0.75rem;
-  width: 100%;
+/* Hide scrollbars on intentionally-scrollable pill rows (mobile tab nav). */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
-input:focus,
-select:focus {
-  outline: 2px solid #286b63;
-  outline-offset: 1px;
+/* Gentle rise-in for the how-it-works stage swaps. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in 0.45s ease both;
 }
 
-label {
-  font-weight: 700;
-  font-size: 0.85rem;
-  display: block;
-  margin-bottom: 0.25rem;
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
 }
