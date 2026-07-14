@@ -79,7 +79,7 @@ export function SiteFooter() {
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
           <FooterLink href="/app">Open the app</FooterLink>
           <FooterLink href="/docs">Guide</FooterLink>
-          <FooterLink href="https://github.com/RonTuretzky/zk-tontine" external>
+          <FooterLink href="https://github.com/RonTuretzky/tontine.fun" external>
             Source code
           </FooterLink>
           <FooterLink

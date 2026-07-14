@@ -19,7 +19,7 @@ import {
 import { SiteFooter, SiteNav } from "../../components/site"
 import { ADDRESSES } from "../../lib/contracts"
 
-// Static export honours NEXT_PUBLIC_BASE_PATH (e.g. /zk-tontine on Pages).
+// Static export honours NEXT_PUBLIC_BASE_PATH (e.g. /tontine.fun on Pages).
 // Plain <img> tags don't get it prepended automatically, so do it here.
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || ""
 const gif = (name: string) => `${BASE}/docs/${name}`
