@@ -11,6 +11,34 @@ const KEY_STORAGE = "long-bread-demo-key"
 const FLAG_STORAGE = "long-bread-demo-wallet"
 const RPC = "https://rpc.gnosischain.com"
 
+// EIP-6963 announcement: wagmi + RainbowKit discover wallets through these
+// events, so the burner shows up in the connect modal like any installed
+// wallet. Idempotent; re-announces whenever a dapp asks.
+const DEMO_ICON =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#EA5817"/><text x="16" y="22" font-size="16" text-anchor="middle">🍞</text></svg>`,
+  )
+
+let announced = false
+export function announceDemoWallet() {
+  if (announced || typeof window === "undefined") return
+  announced = true
+  const detail = Object.freeze({
+    info: Object.freeze({
+      uuid: "5d3f3a52-6a1b-4d3e-9f5a-longbread001",
+      name: "Demo wallet (burner)",
+      icon: DEMO_ICON,
+      rdns: "fun.longbread.demo",
+    }),
+    provider: makeDemoProvider(),
+  })
+  const announce = () =>
+    window.dispatchEvent(new CustomEvent("eip6963:announceProvider", { detail }))
+  window.addEventListener("eip6963:requestProvider", announce)
+  announce()
+}
+
 export function demoWalletEnabled(): boolean {
   if (typeof window === "undefined") return false
   const params = new URLSearchParams(window.location.search)
