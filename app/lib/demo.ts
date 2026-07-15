@@ -62,7 +62,11 @@ export function mkDemoProof(args: {
     domainHash: dHash,
     nullifier: args.nullifier,
     patternHash: args.pattern,
-    emailTimestamp: args.emailTimestamp ?? BigInt(Math.floor(Date.now() / 1000)),
+    // Dated one minute ahead: when a proof's own transaction rolls the season,
+    // the fresh nonce is stamped at the block's time, and an email dated before
+    // it is (correctly) rejected as stale. "Sent just after the season began"
+    // keeps the demo single-transaction; the one-day future-skew bound applies.
+    emailTimestamp: args.emailTimestamp ?? BigInt(Math.floor(Date.now() / 1000) + 60),
     proof: ZERO8,
   }
 }
