@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Long Bread — the deep explainer · tontine.fun</title>
+<style>
+/* ————— Bread design tokens ————— */
+@font-face{font-family:"Bread Display";src:url("fonts/PogacaDisplayBlack.woff2") format("woff2");font-weight:900;font-display:swap}
+@font-face{font-family:"Bread Display";src:url("fonts/PogacaDisplayBold.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Bread Body";src:url("fonts/PogacaBodyRegular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Bread Body";src:url("fonts/PogacaBodyBold.woff2") format("woff2");font-weight:700;font-display:swap}
+:root{
+  --paper:#f6f3eb; --paper-0:#fffdf8; --paper-2:#e7e2d5;
+  --ink:#171414; --grey:#5c5852; --orange:#EA5817; --jade:#286b63;
+  /* validated chart series (categorical, in fixed order) */
+  --s1:#EA5817; --s2:#12876B; --s3:#5B5BD6;
+  --good:#1a7f37; --bad:#b42318; --warn:#9a6700;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--paper);color:var(--ink)}
+body{font-family:"Bread Body",ui-sans-serif,system-ui,sans-serif;font-size:17px;line-height:1.5;overflow:hidden}
+h1,h2,h3{font-family:"Bread Display",ui-sans-serif,system-ui,sans-serif;font-weight:900;letter-spacing:-.01em;line-height:1.05}
+b,strong{font-weight:700}
+/* ————— deck chrome ————— */
+#deck{height:100%;display:flex;flex-direction:column}
+#stage{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;padding:56px 72px 84px;display:none;overflow:auto}
+.slide.on{display:block;animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide.on{animation:none}}
+.kicker{color:var(--orange);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px}
+.slide h2{font-size:clamp(28px,4.4vw,46px);margin:.25em 0 .45em}
+.lede{color:var(--grey);max-width:62ch;font-size:18px}
+.cols{display:grid;gap:22px;margin-top:26px}
+.cols.c2{grid-template-columns:1fr 1fr}
+.cols.c3{grid-template-columns:1fr 1fr 1fr}
+.card{background:var(--paper-0);border:1.5px solid var(--paper-2);border-radius:16px;padding:18px 20px}
+.card h3{font-size:19px;margin-bottom:6px}
+.card p,.card li{font-size:15px;color:var(--grey)}
+.tag{display:inline-block;background:#ea581715;color:var(--orange);border-radius:999px;padding:2px 11px;font-size:12px;font-weight:700}
+.tag.jade{background:#286b6315;color:var(--jade)}
+.foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;padding:12px 24px;border-top:1.5px solid var(--paper-2);background:color-mix(in srgb,var(--paper) 88%,white)}
+.foot .brand{font-family:"Bread Display";font-weight:900;font-size:15px}
+.foot .n{margin-left:auto;color:var(--grey);font-size:13px;font-variant-numeric:tabular-nums}
+#bar{position:absolute;top:0;left:0;height:3px;background:var(--orange);transition:width .25s}
+.navhint{color:var(--grey);font-size:13px}
+.btn{cursor:pointer;border:1.5px solid var(--ink);background:var(--orange);color:#fff;font:700 14px "Bread Body";padding:8px 16px;border-radius:10px;box-shadow:3px 3px 0 0 #59595955}
+.btn.ghost{background:var(--paper-0);color:var(--ink)}
+mark{background:#ea581722;color:inherit;border-radius:4px;padding:0 4px}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:.85em}
+table.simple{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:14px;background:var(--paper-0);border:1.5px solid var(--paper-2);border-radius:12px;overflow:hidden}
+table.simple th{Text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--grey);padding:10px 14px;border-bottom:1.5px solid var(--paper-2);text-align:left}
+table.simple td{padding:10px 14px;border-bottom:1px solid var(--paper-2);vertical-align:top}
+.x{color:var(--bad);font-weight:700}.v{color:var(--good);font-weight:700}
+.pill{display:inline-block;border:1.5px solid var(--paper-2);background:var(--paper-0);border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700}
+/* charts */
+.figure{background:var(--paper-0);border:1.5px solid var(--paper-2);border-radius:16px;padding:16px 18px 8px;position:relative}
+.figure figcaption{font-size:12.5px;color:var(--grey);padding:6px 2px 8px}
+svg text{font-family:"Bread Body",system-ui;fill:var(--grey)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:6px 10px;border-radius:8px;opacity:0;transform:translate(-50%,calc(-100% - 10px));white-space:nowrap;z-index:50}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--grey);padding:2px 2px 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+input[type=range]{accent-color:var(--orange);width:100%}
+.meter{height:10px;border-radius:6px;background:var(--paper-2);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:6px}
+.flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+.flow .step{flex:1;min-width:150px;background:var(--paper-0);border:1.5px solid var(--paper-2);border-radius:14px;padding:12px 14px}
+.flow .arr{align-self:center;color:var(--orange);font-weight:900;font-size:20px}
+.step .t{font-weight:700;font-size:14.5px}
+.step .d{font-size:13px;color:var(--grey)}
+.num{display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--orange);color:#fff;font-weight:700;font-size:13px;align-items:center;justify-content:center;margin-right:8px}
+@media (max-width:900px){.slide{padding:28px 22px 84px}.cols.c2,.cols.c3{grid-template-columns:1fr}}
+@media print{
+  body{overflow:visible} #stage{overflow:visible} .slide{position:static;display:block!important;page-break-after:always;padding:40px}
+  .foot,#bar,.navhint{display:none}
+}
+</style>
+</head>
+<body data-palette="#EA5817,#12876B,#5B5BD6">
+<div id="deck">
+<div id="stage">
+<div id="bar"></div>
+
+<!-- 1 · TITLE -->
+<section class="slide on">
+  <div style="max-width:900px;margin:4vh auto 0;text-align:center">
+    <div class="kicker">tontine.fun · a Bread-flavoured experiment on Gnosis Chain</div>
+    <h1 style="font-size:clamp(48px,9vw,104px);color:var(--orange);margin:.15em 0 0">Long Bread</h1>
+    <h2 style="color:var(--jade);font-style:italic;font-size:clamp(22px,3.4vw,34px);margin-top:6px">A tontine you can audit.</h2>
+    <p class="lede" style="margin:22px auto 0">The deep version: what a tontine is, why every previous attempt to put one
+    on a blockchain broke, how email-proof life &amp; death oracles change the shape of the problem, the exact economics,
+    and an honest accounting of what you still have to trust.</p>
+    <p style="margin-top:26px">
+      <span class="pill">🍞 Live on Gnosis mainnet</span>&nbsp;
+      <span class="pill">📜 57 contract tests</span>&nbsp;
+      <span class="pill">🎬 full lifecycle already executed on-chain</span>
+    </p>
+    <p class="navhint" style="margin-top:34px">→ / space to advance · ← to go back · <span class="mono">p</span> to print</p>
+  </div>
+</section>
+
+<!-- 2 · WHAT IS A TONTINE -->
+<section class="slide">
+  <div class="kicker">Part I · The idea</div>
+  <h2>A tontine is survivorship, pooled</h2>
+  <p class="lede">Invented by Lorenzo de Tonti in 1653: a group pools capital; everyone draws income while alive;
+  when a member dies, their share stays with the pool — so the income of the living grows.
+  The last survivors are carried by everyone who came before. No insurer guarantees anything;
+  the pool <b>is</b> the guarantee.</p>
+  <div class="figure" style="margin-top:26px"><div id="timeline"></div>
+  <figcaption>Three and a half centuries in one line — the mechanism was never the problem.</figcaption></div>
+  <div class="cols c3">
+    <div class="card"><h3>1653 · Born</h3><p>Tonti pitches Louis XIV: state borrowing where coupon payments concentrate on survivors. European states fund wars with it for 150 years.</p></div>
+    <div class="card"><h3>1900 · Peak</h3><p>Tontine-style ("deferred dividend") policies are <b>two-thirds of US life insurance</b> — about 7% of national wealth sits in them.</p></div>
+    <div class="card"><h3>1905 · Killed</h3><p>New York's Armstrong Investigation finds insurers embezzling the opaque pools. The product dies of <b>custody</b>, not arithmetic.</p></div>
+  </div>
+</section>
+
+<!-- 3 · WHY ACTUARIES LOVE IT -->
+<section class="slide">
+  <div class="kicker">Part I · The idea</div>
+  <h2>Mortality credits: the highest yield nobody can print</h2>
+  <p class="lede">Each death releases an estate to the survivors — actuaries call these <b>mortality credits</b>.
+  They rise with age exactly when portfolio returns stop being enough, which is why a tontine can pay
+  a lifetime income with <b>no insurer, no guarantee capital, and no margin</b>. Below: one expected path for a
+  circle of 100 members, all 65, equal stakes of 10,000, 4%/yr vault yield, drawing the age-banded income rule.</p>
+  <div class="cols c2" style="margin-top:20px">
+    <figure class="figure"><div class="legend"><span><i style="background:var(--s2)"></i>Members still alive</span></div><div id="chSurv"></div>
+      <figcaption>The circle shrinks — expected survivors by age (period-table mortality).</figcaption></figure>
+    <figure class="figure"><div class="legend"><span><i style="background:var(--s1)"></i>Monthly income per survivor</span></div><div id="chInc"></div>
+      <figcaption>The bread grows — same simulation, per-survivor monthly draw. Two panels, one x-axis: never a dual-axis chart.</figcaption></figure>
+  </div>
+</section>
+
+<!-- 4 · WHY IT DIED -->
+<section class="slide">
+  <div class="kicker">Part I · The idea</div>
+  <h2>1905: the pot was dark, and hands went in</h2>
+  <div class="cols c2" style="align-items:center">
+    <div>
+      <p class="lede">The Armstrong Investigation didn't find bad math. It found that decades-long pooled funds,
+      visible to no member, were being skimmed by the companies holding them: embezzlement, self-dealing,
+      and abusive lapse terms engineered so members forfeited.</p>
+      <ul style="margin:16px 0 0 20px;color:var(--grey);font-size:15.5px;line-height:1.8">
+        <li><b>Opaque custody</b> — no member could see the pool.</li>
+        <li><b>Discretionary payouts</b> — the insurer decided who got what, when.</li>
+        <li><b>Forfeiture by fine print</b> — miss a premium, lose everything.</li>
+      </ul>
+      <p style="margin-top:16px;color:var(--grey);font-size:15.5px">New York then regulated 95% of the US market, and the
+      product vanished — <mark>“throwing out the baby with the bathwater,”</mark> as the Cato Institute's retrospective puts it.
+      Note what the statute actually bans: payout intervals <i>longer than a year</i>. Monthly-paying tontines were never the target.</p>
+    </div>
+    <div class="card" style="text-align:center;padding:30px">
+      <div id="potViz"></div>
+      <p style="margin-top:10px;font-size:14px">The three 1905 failures — and what fixes each is <b>structural</b>, not moral:
+      a ledger anyone can read, rules with no discretion, and lapse that pauses instead of confiscating.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · THE ONCHAIN PROBLEM -->
+<section class="slide">
+  <div class="kicker">Part II · The hard part</div>
+  <h2>A blockchain fixes custody — and knows nothing about death</h2>
+  <p class="lede">Smart contracts solve exactly the three Armstrong failures: transparent custody, mechanical rules,
+  no discretion. But a tontine's <b>entire trigger</b> is a fact the chain cannot observe: whether a human being
+  is still breathing. Every onchain tontine lives or dies by how it imports that one bit of reality.</p>
+  <div class="figure" style="margin-top:24px"><div id="islandViz"></div>
+  <figcaption>The oracle gap: the ledger on one side, biology on the other. Something must carry the fact across — and everything depends on what that something is.</figcaption></div>
+</section>
+
+<!-- 6 · PRIOR ATTEMPTS -->
+<section class="slide">
+  <div class="kicker">Part II · The hard part</div>
+  <h2>Every previous attempt, and where it broke</h2>
+  <table class="simple">
+    <tr><th style="width:19%">Attempt</th><th style="width:27%">Death oracle</th><th>What actually breaks</th></tr>
+    <tr>
+      <td><b>ether-tontine</b><br><span class="mono" style="font-size:12px">dmotz, 2018</span></td>
+      <td>“Death” = missing a scheduled dues payment.</td>
+      <td><span class="x">✗</span> Liveness measures <b>key management and diligence, not life</b>. Lose your keys on holiday → actuarially executed. Its own README disclaims yield — it's a survival lottery, not a pension.</td>
+    </tr>
+    <tr>
+      <td><b>TontineTrust / Tonchain</b><br><span class="mono" style="font-size:12px">2018→</span></td>
+      <td>The operator: a “robo-actuary” plus biometric checks, run by the provider.</td>
+      <td><span class="x">✗</span> Actuarially serious and legally careful — but <b>a provider is back in the middle</b>. The chain is bookkeeping, not trust removal: custody, death verification and payout logic all route through one company. Not permissionless; not an open protocol.</td>
+    </tr>
+    <tr>
+      <td><b>TontineCoin</b><br><span class="mono" style="font-size:12px">SJSU research, 2020</span></td>
+      <td>Proof-of-stake validators penalize “inactive” members.</td>
+      <td><span class="x">✗</span> Same category error at consensus scale: <b>protocol activity ≠ biological life</b>, and validator collusion can declare anyone dead — or keep anyone alive.</td>
+    </tr>
+    <tr>
+      <td><b>US commercial attempts</b></td>
+      <td>—</td>
+      <td><span class="x">✗</span> Killed by <b>regulatory ambiguity</b>, not technology (Brookings: not permissible in 401(k)s; Congress channels lifetime income to insurers). Canada's Purpose Fund (2021) shows a working path — as a mutual fund, off-chain.</td>
+    </tr>
+  </table>
+  <p style="margin-top:14px;color:var(--grey);font-size:15px">Three lessons: <b>(1)</b> liveness must measure life, not activity ·
+  <b>(2)</b> forgetting must never equal dying · <b>(3)</b> removing the insurer only counts if no operator replaces it.</p>
+</section>
+
+<!-- 7 · THE DESIGN -->
+<section class="slide">
+  <div class="kicker">Part III · The design</div>
+  <h2>Import death as evidence, not as authority</h2>
+  <p class="lede">Long Bread's answer: the world already emits <b>cryptographically signed statements about life and death</b> —
+  every email is DKIM-signed by its sending institution. Funeral homes, obituary platforms and insurers send
+  machine-generated notifications; your own mail provider signs everything you send. zkEmail turns any such email into an
+  on-chain proof that reveals a fact without revealing the mail. No oracle committee. No operator. Evidence.</p>
+  <div class="figure" style="margin-top:22px"><div id="sysViz"></div>
+  <figcaption>The system: one mortality record (LifeOracle) shared by many circles (pools); a DKIM key registry with a fast revocation guardian; one verifier routing each proof type to its circuit.</figcaption></div>
+</section>
+
+<!-- 8 · PROOF OF LIFE -->
+<section class="slide">
+  <div class="kicker">Part III · The design</div>
+  <h2>Proof of life: a code word that didn't exist yesterday</h2>
+  <div class="cols c2">
+    <div>
+      <p class="lede">Each season the contract derives a fresh nonce from a <b>blockhash observed after the season begins</b>.
+      To check in, a member sends one email with that nonce in the subject line and proves their provider's DKIM
+      signature over it.</p>
+      <ul style="margin:14px 0 0 20px;color:var(--grey);font-size:15.5px;line-height:1.85">
+        <li><b>Can't be stockpiled:</b> the nonce didn't exist before the season — an heir can't replay emails written while you were alive. (The demo hit this rule for real: a proof written seconds before a season roll was correctly rejected.)</li>
+        <li><b>Can't be delegated to a bot… cheaply:</b> it requires live control of the mailbox each season, forever.</li>
+        <li><b>Missing one costs nothing:</b> income pauses; a lapse never forfeits. Lesson 2, structurally enforced.</li>
+        <li><b>Lost wallet ≠ death:</b> re-prove the same mailbox to bind a new wallet.</li>
+      </ul>
+    </div>
+    <div class="figure"><div id="lifeViz"></div>
+    <figcaption>Timestamps do the work: email time must land after the nonce was born and after the member's previous proof.</figcaption></div>
+  </div>
+</section>
+
+<!-- 9 · PROOF OF DEATH -->
+<section class="slide">
+  <div class="kicker">Part III · The design</div>
+  <h2>Proof of death: bonded, optimistic, refutable by one check-in</h2>
+  <div class="flow" style="margin-top:8px">
+    <div class="step"><span class="num">1</span><span class="t">Report</span><div class="d">Anyone holding a death-notification email from an allow-listed institution (funeral home, obituary platform, insurer) posts it as a zk proof + a good-faith bond. One claim per unique email.</div></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="num">2</span><span class="t">Waiting period</span><div class="d">Nothing moves. The claim is public. The reported member can kill it with a single ordinary check-in — and the bond is forfeited <b>to them</b>.</div></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="num">3</span><span class="t">Finalize</span><div class="d">Unchallenged claims become final; the reporter's bond returns and they're recorded for the finder's fee.</div></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="num">4</span><span class="t">Share out</span><div class="d">Anyone triggers settlement: family share → named beneficiary, finder's fee → reporter, remainder → survivors by the fair-transfer weights.</div></div>
+  </div>
+  <div class="cols c2" style="margin-top:20px">
+    <div class="card"><h3>Why a waiting period is non-negotiable</h3>
+    <p>False death records are routine at scale: the US Social Security Death Master File wrongly marks
+    <b>≈12,000 living people dead every year</b>. A design without a refutation window replicates that harm with money attached.</p></div>
+    <div class="card"><h3>Why this shape works elsewhere</h3>
+    <p>It's the optimistic-oracle pattern (bond → liveness window → dispute): UMA resolves <b>99.8%</b> of assertions without
+    any dispute. Here the natural challenger is the “dead” member — the one party guaranteed to care.</p>
+    <p style="margin-top:8px">Members with no email trail at death are handled by <b>presumed death</b>: a very long silence, a much bigger bond, a longer window.</p></div>
+  </div>
+</section>
+
+<!-- 10 · ECONOMICS I -->
+<section class="slide">
+  <div class="kicker">Part IV · The economics</div>
+  <h2>The fair transfer plan (Sabin–Fullmer)</h2>
+  <p class="lede">When a member dies, who gets their estate — and how much? Splitting equally cheats the old;
+  splitting by stake cheats the poor-but-old. The verified answer from the actuarial literature: split in proportion to</p>
+  <div style="text-align:center;margin:18px 0">
+    <span style="display:inline-block;background:var(--paper-0);border:1.5px solid var(--paper-2);border-radius:14px;padding:14px 26px;font-size:22px">
+      w<sub>i</sub> &nbsp;=&nbsp; s<sub>i</sub> · <span style="color:var(--orange)">q<sub>i</sub>/(1−q<sub>i</sub>)</span> · (1−β<sub>i</sub>)
+    </span>
+    <div style="color:var(--grey);font-size:13.5px;margin-top:8px">stake · <b>nominal tontine yield</b> (q = your annual death probability) · pooled fraction (β = your family share)</div>
+  </div>
+  <p style="color:var(--grey);font-size:15.5px;max-width:70ch">With these weights, every member's <b>expected gain from others' deaths equals their expected
+  contribution from their own</b> — the “fair bet” condition. It's what lets a 30-year-old and an 85-year-old sit in one circle
+  without either subsidising the other, and it's implemented as an O(1) accumulator (the per-event group-gain factor), so settlement never loops over members.</p>
+  <div class="figure" style="margin-top:14px">
+    <div class="cols c2" style="margin:0;align-items:center">
+      <div>
+        <label style="font-size:13px;color:var(--grey)">Survivor A — age <b id="ageAv">62</b></label>
+        <input type="range" id="ageA" min="30" max="95" value="62">
+        <label style="font-size:13px;color:var(--grey)">Survivor B — age <b id="ageBv">81</b></label>
+        <input type="range" id="ageB" min="30" max="95" value="81">
+        <p style="font-size:13px;color:var(--grey);margin-top:8px">Equal stakes, no family share. Drag the ages — the estate split follows q/(1−q), not opinion.</p>
+      </div>
+      <div id="fairViz"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · ECONOMICS II -->
+<section class="slide">
+  <div class="kicker">Part IV · The economics</div>
+  <h2>Where an estate goes, and what a survivor may draw</h2>
+  <div class="cols c2">
+    <figure class="figure">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Finder's fee 2%</span><span><i style="background:var(--s3)"></i>Family share (chosen, ≤50%)</span><span><i style="background:var(--s2)"></i>Survivors' credits</span></div>
+      <div id="estateViz"></div>
+      <figcaption>Not hypothetical: the split of the estate actually settled on Gnosis mainnet during the recorded demo
+      (member “Bianca”, 30% family share → 2.0% / 29.4% / 68.6%).</figcaption>
+    </figure>
+    <figure class="figure">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Annual draw cap, % of balance</span></div>
+      <div id="rateViz"></div>
+      <figcaption>The income rule: an age-banded annuitization cap (≈ 1 / remaining life expectancy). Credits are spent
+      before principal; missed months accrue for up to a year; drawing requires a current check-in — which is the whole
+      reason check-ins matter.</figcaption>
+    </figure>
+  </div>
+  <p style="margin-top:14px;color:var(--grey);font-size:15px">Reserve asset: <b>sDAI on Gnosis</b> — an audited public savings
+  vault (bridged-DAI savings rate, ~1.248 share price at deploy). Yield accrues to the pot with zero bookkeeping and no manager.</p>
+</section>
+
+<!-- 12 · INCENTIVE LATTICE -->
+<section class="slide">
+  <div class="kicker">Part IV · The economics</div>
+  <h2>Every attack pays its counterparty</h2>
+  <table class="simple">
+    <tr><th style="width:30%">Attack</th><th>Economic counter</th></tr>
+    <tr><td><b>False death report</b> (eject a living member)</td><td>Bond forfeits <b>to the victim</b>; one ordinary check-in refutes; institutional DKIM required; one claim per unique email. Harassment funds the harassed.</td></tr>
+    <tr><td><b>Concealed death</b> (heirs keep collecting)</td><td>2% finder's fee makes every death a public race — obituaries are broadcast; the challenge-nonce blocks replayed life proofs; fraud must be re-performed every season, forever, against a standing bounty.</td></tr>
+    <tr><td><b>Stockpiled life proofs</b></td><td>Season nonce derives from a post-season blockhash — proofs cannot exist before the season does.</td></tr>
+    <tr><td><b>Murder incentive</b> (the classic)</td><td>Members are pseudonymous fingerprints, stake caps bound any one death's effect (and the fair weights spread it), credits arrive as income drip — no jackpot to kill for.</td></tr>
+    <tr><td><b>Whale distortion / Sybil dilution</b></td><td>Min/max stake bounds — not cosmetic: equitability provably breaks under extreme stake heterogeneity (Milevsky–Salisbury). One mailbox = one seat, forever.</td></tr>
+    <tr><td><b>Adverse selection</b> (healthy leave, sick stay)</td><td>Closed cohorts: full refund before doors close, irrevocable after. No surrender value to select against.</td></tr>
+    <tr><td><b>Spoofed institutions</b></td><td>Death proofs only from allow-listed DKIM keys; a guardian can revoke a leaked key instantly — revocation kills even back-dated mail, since a forgery is indistinguishable from an old email.</td></tr>
+  </table>
+</section>
+
+<!-- 13 · TRUST ASSUMPTIONS -->
+<section class="slide">
+  <div class="kicker">Part V · The honest part</div>
+  <h2>What you still have to trust</h2>
+  <p class="lede">“Trustless” is a spectrum, and pretending otherwise is how 1905 happens again. Ranked by how much weight each assumption carries today:</p>
+  <div id="trustViz" style="margin-top:18px;max-width:1020px"></div>
+  <p style="margin-top:14px;color:var(--grey);font-size:14.5px">The first two are <b>deployment maturity</b>, not design: real
+  per-blueprint Groth16 circuits drop into the verifier without touching anything else (the sibling p2peace project has already
+  walked the full mock→real path on this exact proof envelope), and ownership moves to a timelocked multisig by config.</p>
+</section>
+
+<!-- 14 · STRENGTHS / WEAKNESSES -->
+<section class="slide">
+  <div class="kicker">Part V · The honest part</div>
+  <h2>Strengths and weaknesses, side by side</h2>
+  <div class="cols c2">
+    <div class="card" style="border-color:#1a7f3744">
+      <h3 style="color:var(--good)">Where it's strong</h3>
+      <ul style="margin:8px 0 0 18px;line-height:1.75;font-size:15px;color:var(--grey)">
+        <li><b>The 1905 failure is structurally gone</b> — custody is a public contract; no discretion anywhere; no promoter take.</li>
+        <li><b>Life ≠ activity</b> — the first onchain tontine whose liveness measures biology-adjacent evidence, not key possession.</li>
+        <li><b>Forgetting is safe</b> — lapse pauses income; only verified death moves money; wallets are recoverable via the mailbox.</li>
+        <li><b>Fairness is verified math</b> — Sabin–Fullmer weights (checked 3–0 against primary sources), bequest handled per Bernhardt–Donnelly, mixed ages/stakes provably non-subsidising.</li>
+        <li><b>Dispute economics with teeth</b> — every attack path funds its victim or its hunter.</li>
+        <li><b>It exists</b> — live on Gnosis; a full member lifecycle (join → check-in → report → dispute → settle → income) already executed on mainnet.</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#b4231844">
+      <h3 style="color:var(--bad)">Where it's weak</h3>
+      <ul style="margin:8px 0 0 18px;line-height:1.75;font-size:15px;color:var(--grey)">
+        <li><b>Demo proofs are simulated</b> — the Groth16 verifier is a mock today; contract rules are real, cryptographic email verification is not yet.</li>
+        <li><b>Mailbox custody = identity custody</b> — an heir with full, ongoing email control can impersonate check-ins; the nonce and bounty make it costly and risky, not impossible.</li>
+        <li><b>A trusted set remains</b> — the DKIM registry owner/guardian (an EOA in the demo) decides which institutions count.</li>
+        <li><b>The email substrate is uneven</b> — not every death emits an institutional email; the presumed-death path is deliberately slow.</li>
+        <li><b>Small circles are lumpy</b> — mortality credits arrive as events, not a smooth curve; the math wants hundreds of members.</li>
+        <li><b>Regulatory posture is untested</b> — structured to avoid insurance (no underwriting, no guarantee, monthly payouts) per the TontineTrust analyses, but no court has said so.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · LIVE SYSTEM -->
+<section class="slide">
+  <div class="kicker">Part VI · On chain, today</div>
+  <h2>The books, in public</h2>
+  <div class="cols c2">
+    <div>
+      <table class="simple" style="margin-top:4px">
+        <tr><td>Mortality record (LifeOracle)</td><td class="mono">0x22D6…4D20</td></tr>
+        <tr><td>Rising Circle — open to join</td><td class="mono">0x251d…5312</td></tr>
+        <tr><td>Harvest Circle II — paying income</td><td class="mono">0x5b21…a1Fe</td></tr>
+        <tr><td>Circle factory</td><td class="mono">0xB525…2784</td></tr>
+        <tr><td>DKIM registry / proof router</td><td class="mono">0xA40C…0e35 / 0xb613…AA29</td></tr>
+        <tr><td>Savings vault (Gnosis sDAI)</td><td class="mono">0xaf20…3701</td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:14px;color:var(--grey)">Demo tuning, stated plainly: seasons are 30 minutes,
+      waiting periods 10, bonds are pocket change, and email checks accept practice proofs. Every other rule — custody,
+      windows, weights, splits, caps — is exactly the production logic.</p>
+    </div>
+    <div class="card">
+      <h3>The lifecycle that already ran on mainnet</h3>
+      <p style="line-height:1.7">Two members, <b>Maria</b> (b. 1958) and <b>Bianca</b> (b. 1949), joined Harvest Circle II from burner
+      wallets. Bianca was falsely reported dead — and cancelled it with one check-in, pocketing the reporter's bond.
+      Reported again and unchallenged, her passing became final: <b>2%</b> to the reporter, <b>30%</b> to her named beneficiary
+      (Maria), the remaining <b>68.6%</b> to the circle. Maria's balance grew from 0.60 to 1.01 xDAI, she checked in, and drew
+      her first month's income. Every step is a public transaction — and each one is a recording in
+      <a href="../docs/" style="color:var(--orange)">the guide</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · WHAT'S NEXT -->
+<section class="slide">
+  <div class="kicker">Part VI · On chain, today</div>
+  <h2>The path from demo to institution</h2>
+  <div class="cols c3">
+    <div class="card"><h3>1 · Real circuits</h3><p>Per-blueprint Groth16 verifiers (registry.zk.email compiles and deploys from regex blueprints) replace the mock via one <span class="mono">setVerifier</span> call each. The proof envelope, registry and pools don't change.</p></div>
+    <div class="card"><h3>2 · Harder identity</h3><p>Mailbox-grade Sybil resistance graduates to eID-grade anchors (government / bank mail domains, or zkPassport-style personhood) for production circles.</p></div>
+    <div class="card"><h3>3 · Shared stewardship</h3><p>DKIM registry + oracle ownership to a timelocked multisig with an independent revocation guardian; then circles of hundreds, where the law of large numbers does the actuarial smoothing.</p></div>
+  </div>
+  <div class="card" style="margin-top:20px"><h3>The claim, in one sentence</h3>
+  <p style="font-size:16px">A tontine died in 1905 because members couldn't see the pot; this one dies only if members stop
+  being able to prove they're alive — and it is built so that proving you're alive costs one email a season, while lying
+  about anyone's death costs money you hand to your victim.</p></div>
+</section>
+
+<!-- 17 · CLOSING -->
+<section class="slide">
+  <div style="max-width:860px;margin:10vh auto 0;text-align:center">
+    <h2 style="font-size:clamp(34px,6vw,64px);color:var(--jade)">Save together.<br>Stay together.<br><span style="color:var(--orange)">Eat forever.</span></h2>
+    <p class="lede" style="margin:24px auto 0">Long Bread is a live experiment in whether a 370-year-old instrument,
+    the reason it died, and the two newest tools we have — public ledgers and provable email — add up to a pension
+    nobody has to be trusted with.</p>
+    <p style="margin-top:30px">
+      <a class="btn" href="../" style="text-decoration:none">Open tontine.fun</a>&nbsp;
+      <a class="btn ghost" href="../docs/" style="text-decoration:none">Read the guide</a>&nbsp;
+      <a class="btn ghost" href="https://github.com/RonTuretzky/tontine.fun" style="text-decoration:none">Source</a>
+    </p>
+    <p class="navhint" style="margin-top:36px">Built with the Bread Cooperative design kit · Gnosis Chain · sources: Sabin&amp;Fullmer, Milevsky&amp;Salisbury, Bernhardt&amp;Donnelly, Cato, Brookings, UMA docs, SSA DMF, zk.email</p>
+  </div>
+</section>
+
+</div>
+<div class="foot">
+  <span class="brand">🍞 Long Bread — the deep explainer</span>
+  <span class="navhint">← → navigate</span>
+  <span class="n"><span id="cur">1</span> / <span id="tot">17</span></span>
+</div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+/* ————— deck nav ————— */
+const slides=[...document.querySelectorAll('.slide')],tot=slides.length;let cur=0;
+document.getElementById('tot').textContent=tot;
+function go(n){cur=Math.max(0,Math.min(tot-1,n));slides.forEach((s,i)=>s.classList.toggle('on',i===cur));
+  document.getElementById('cur').textContent=cur+1;document.getElementById('bar').style.width=((cur+1)/tot*100)+'%';}
+addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown')go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);if(e.key==='Home')go(0);if(e.key==='End')go(tot-1);
+  if(e.key==='p')print();});
+let tx=null;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>60)go(cur+(d<0?1:-1));tx=null;},{passive:true});
+go(0);
+
+/* ————— shared helpers ————— */
+const S1='#EA5817',S2='#12876B',S3='#5B5BD6',GREY='#5c5852',PAPER2='#e7e2d5',INK='#171414';
+const tip=document.getElementById('tip');
+function showTip(x,y,html){tip.innerHTML=html;tip.style.left=x+'px';tip.style.top=y+'px';tip.style.opacity=1;}
+function hideTip(){tip.style.opacity=0;}
+const NS='http://www.w3.org/2000/svg';
+function el(n,a,parent){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(parent)parent.appendChild(e);return e;}
+function svgIn(id,w,h){const host=document.getElementById(id);const s=el('svg',{viewBox:`0 0 ${w} ${h}`,width:'100%'});host.appendChild(s);return s;}
+
+/* mortality (annual q, bps) and payout tables — mirrors TontinePool.sol */
+function qbps(a){return a<25?8:a<30?10:a<35?12:a<40?16:a<45?22:a<50?33:a<55?50:a<60?78:a<65?120:a<70?180:a<75?280:a<80?450:a<85?750:a<90?1300:a<95?2200:3500}
+function rate(a){return a<60?400:a<65?500:a<70?560:a<75?650:a<80?800:a<85?1000:a<90?1300:1800}
+
+/* ————— slide 2: timeline ————— */
+(()=>{const w=980,h=110,s=svgIn('timeline',w,h);
+  el('line',{x1:40,y1:60,x2:w-40,y2:60,stroke:PAPER2,'stroke-width':3},s);
+  const pts=[[70,'1653','Tonti proposes it',S2],[300,'1700s','Europe funds wars with tontines',S2],
+    [560,'1900','⅔ of US life insurance',S1],[700,'1905','Armstrong kills it',INK],[910,'2026','On a public ledger',S1]];
+  pts.forEach(([x,y1,t,c])=>{el('circle',{cx:x,cy:60,r:7,fill:c},s);
+    const l1=el('text',{x,y:34,'text-anchor':'middle','font-size':15,'font-weight':700,fill:INK},s);l1.textContent=y1;
+    const l2=el('text',{x,y:90,'text-anchor':'middle','font-size':12},s);l2.textContent=t;});})();
+
+/* ————— slide 3: small multiples ————— */
+(()=>{ // simulate expected path
+  const yrs=[];let alive=100,B=10000;const r=.04;
+  for(let a=65;a<=99;a++){const q=qbps(a)/1e4;const inc=B*rate(a)/1e4/12;
+    yrs.push({a,alive,inc});B=B*(1+r)*(1/(1-q))-B*rate(a)/1e4;alive*=(1-q);}
+  function lineChart(id,key,color,fmt){const w=470,h=250,P={l:52,r:14,t:12,b:34};const s=svgIn(id,w,h);
+    const xs=yrs.map(d=>d.a),ys=yrs.map(d=>d[key]);const ymax=Math.max(...ys)*1.08;
+    const X=a=>P.l+(a-65)/(99-65)*(w-P.l-P.r),Y=v=>h-P.b-(v/ymax)*(h-P.t-P.b);
+    for(let i=0;i<=4;i++){const v=ymax/4*i;el('line',{x1:P.l,y1:Y(v),x2:w-P.r,y2:Y(v),stroke:PAPER2,'stroke-width':1},s);
+      const t=el('text',{x:P.l-8,y:Y(v)+4,'text-anchor':'end','font-size':11},s);t.textContent=fmt(v);}
+    [65,75,85,95].forEach(a=>{const t=el('text',{x:X(a),y:h-10,'text-anchor':'middle','font-size':11},s);t.textContent=a;});
+    const t2=el('text',{x:(P.l+w-P.r)/2,y:h-10+0,'text-anchor':'middle','font-size':11,dy:0},s);
+    el('path',{d:yrs.map((d,i)=>(i?'L':'M')+X(d.a)+' '+Y(d[key])).join(' '),fill:'none',stroke:color,'stroke-width':2.5,'stroke-linejoin':'round'},s);
+    // hover
+    const hover=el('rect',{x:P.l,y:P.t,width:w-P.l-P.r,height:h-P.t-P.b,fill:'transparent'},s);
+    const dot=el('circle',{r:5,fill:color,stroke:'#fff','stroke-width':2,opacity:0},s);
+    const vline=el('line',{y1:P.t,y2:h-P.b,stroke:GREY,'stroke-width':1,'stroke-dasharray':'3 3',opacity:0},s);
+    hover.addEventListener('mousemove',e=>{const r2=hover.getBoundingClientRect();
+      const a=Math.round(65+(e.clientX-r2.left)/r2.width*(99-65));const d=yrs.find(y=>y.a===a);if(!d)return;
+      dot.setAttribute('cx',X(a));dot.setAttribute('cy',Y(d[key]));dot.setAttribute('opacity',1);
+      vline.setAttribute('x1',X(a));vline.setAttribute('x2',X(a));vline.setAttribute('opacity',1);
+      showTip(e.clientX,e.clientY,`age ${a} · <b>${fmt(d[key])}</b>`);});
+    hover.addEventListener('mouseleave',()=>{dot.setAttribute('opacity',0);vline.setAttribute('opacity',0);hideTip();});}
+  lineChart('chSurv','alive',S2,v=>Math.round(v)+'');
+  lineChart('chInc','inc',S1,v=>Math.round(v).toLocaleString());})();
+
+/* ————— slide 4: pot ————— */
+(()=>{const w=300,h=190,s=svgIn('potViz',w,h);
+  el('ellipse',{cx:150,cy:150,rx:110,ry:28,fill:'#00000012'},s);
+  el('path',{d:'M50 90 Q50 160 150 160 Q250 160 250 90 Z',fill:S2,opacity:.9},s);
+  el('ellipse',{cx:150,cy:90,rx:100,ry:24,fill:'#0b4a43'},s);
+  const q=el('text',{x:150,y:60,'text-anchor':'middle','font-size':40},s);q.textContent='🫥';
+  const c=el('text',{x:150,y:100,'text-anchor':'middle','font-size':16,fill:'#fff','font-weight':700},s);c.textContent='the 1905 pot';
+  const d=el('text',{x:150,y:122,'text-anchor':'middle','font-size':12,fill:'#ffffffcc'},s);d.textContent='dark · discretionary · confiscating';})();
+
+/* ————— slide 5: island ————— */
+(()=>{const w=980,h=250,s=svgIn('islandViz',w,h);
+  // ledger island
+  el('rect',{x:30,y:40,width:340,height:170,rx:18,fill:'#fffdf8',stroke:PAPER2,'stroke-width':1.5},s);
+  let t=el('text',{x:200,y:76,'text-anchor':'middle','font-size':17,'font-weight':700,fill:INK},s);t.textContent='THE LEDGER';
+  ;['sees keys & transactions','enforces any rule, forever','cannot see a heartbeat'].forEach((str,i)=>{
+    const li=el('text',{x:200,y:108+i*28,'text-anchor':'middle','font-size':13.5},s);li.textContent=(i===2?'✗ ':'✓ ')+str;
+    li.setAttribute('fill',i===2?'#b42318':'#1a7f37');});
+  // world island
+  el('rect',{x:610,y:40,width:340,height:170,rx:18,fill:'#fffdf8',stroke:PAPER2,'stroke-width':1.5},s);
+  t=el('text',{x:780,y:76,'text-anchor':'middle','font-size':17,'font-weight':700,fill:INK},s);t.textContent='THE WORLD';
+  ;['people live and die','institutions notice','…and send signed email (DKIM)'].forEach((str,i)=>{
+    const li=el('text',{x:780,y:108+i*28,'text-anchor':'middle','font-size':13.5,fill:GREY},s);li.textContent=str;
+    if(i===2)li.setAttribute('fill',S1),li.setAttribute('font-weight',700);});
+  // bridge
+  el('path',{d:'M375 125 C 460 60 520 60 605 125',fill:'none',stroke:S1,'stroke-width':3,'stroke-dasharray':'7 6'},s);
+  t=el('text',{x:490,y:70,'text-anchor':'middle','font-size':14,'font-weight':700,fill:S1},s);t.textContent='zk proof of a signed email';
+  t=el('text',{x:490,y:190,'text-anchor':'middle','font-size':13,fill:GREY},s);t.textContent='previous attempts bridged with: nothing (payments) · an operator · validators';})();
+
+/* ————— slide 7: system diagram ————— */
+(()=>{const w=980,h=300,s=svgIn('sysViz',w,h);
+  function box(x,y,ww,hh,title,sub,color){el('rect',{x,y,width:ww,height:hh,rx:14,fill:'#fffdf8',stroke:color||PAPER2,'stroke-width':2},s);
+    const t=el('text',{x:x+ww/2,y:y+26,'text-anchor':'middle','font-size':15,'font-weight':700,fill:INK},s);t.textContent=title;
+    sub.forEach((line,i)=>{const u=el('text',{x:x+ww/2,y:y+48+i*18,'text-anchor':'middle','font-size':12},s);u.textContent=line;});}
+  function arrow(x1,y1,x2,y2,label,color){el('line',{x1,y1,x2,y2,stroke:color||GREY,'stroke-width':2},s);
+    el('circle',{cx:x2,cy:y2,r:3.5,fill:color||GREY},s);
+    if(label){const t=el('text',{x:(x1+x2)/2,y:(y1+y2)/2-8,'text-anchor':'middle','font-size':11.5,'font-weight':700,fill:color||GREY},s);t.textContent=label;}}
+  box(20,20,210,90,'Your mailbox',['sends the seasonal','check-in email'],S2);
+  box(20,190,210,90,'Institutions',['funeral homes · obituaries','insurers — DKIM-signed'],S1);
+  box(330,100,180,100,'Proof router',['one Groth16 verifier','per email blueprint'],'');
+  box(330,20,180,60,'DKIM registry',['allow-listed keys','+ instant revocation'],'');
+  box(590,100,170,100,'LifeOracle',['alive · reported · final','bonds & windows'],'');
+  box(820,40,140,80,'Circle A',['sDAI pot','fair weights'],S2);
+  box(820,180,140,80,'Circle B',['sDAI pot','fair weights'],S2);
+  arrow(230,65,330,120,'life proof',S2);
+  arrow(230,235,330,180,'death proof',S1);
+  arrow(420,100,420,80,'',GREY);
+  arrow(510,150,590,150,'verified facts',GREY);
+  arrow(760,130,820,90,'settle',GREY);
+  arrow(760,170,820,210,'settle',GREY);})();
+
+/* ————— slide 8: life timeline ————— */
+(()=>{const w=460,h=240,s=svgIn('lifeViz',w,h);
+  el('line',{x1:30,y1:120,x2:w-20,y2:120,stroke:PAPER2,'stroke-width':3},s);
+  const put=(x,y,txt,size,weight,color,anchor)=>{const t=el('text',{x,y,'font-size':size||12,'text-anchor':anchor||'middle','font-weight':weight||400,fill:color||GREY},s);t.textContent=txt;return t};
+  el('rect',{x:60,y:104,width:10,height:32,rx:3,fill:S3},s);put(65,90,'season begins',12,700,S3);put(65,156,'blockhash → nonce born',11);
+  el('rect',{x:200,y:104,width:10,height:32,rx:3,fill:S2},s);put(205,90,'you send the email',12,700,S2);put(205,156,'nonce in subject',11);
+  el('rect',{x:330,y:104,width:10,height:32,rx:3,fill:S1},s);put(335,90,'proof lands on-chain',12,700,S1);put(335,156,'timestamps checked',11);
+  el('path',{d:'M70 190 L 330 190',stroke:'#1a7f37','stroke-width':2,'stroke-dasharray':'4 4'},s);
+  put(200,210,'✓ email time ≥ nonce birth · > your previous proof · ≤ now + a day',11.5,700,'#1a7f37');
+  put(30,40,'an email written before the season began — even by you — is rejected as stale',12,400,GREY,'start');})();
+
+/* ————— slide 10: fair split interactive ————— */
+(()=>{const host=document.getElementById('fairViz');const w=430,h=210;const s=el('svg',{viewBox:`0 0 ${w} ${h}`,width:'100%'});host.appendChild(s);
+  const gA=el('g',{},s),gB=el('g',{},s);
+  function bar(g,y,color){el('rect',{x:120,y,width:0,height:34,rx:5,fill:color},g);
+    const lab=el('text',{x:112,y:y+22,'text-anchor':'end','font-size':13.5,'font-weight':700,fill:INK},g);
+    const val=el('text',{x:130,y:y+22,'font-size':13.5,'font-weight':700,fill:INK},g);return {g,lab,val};}
+  const A=bar(gA,50,S1),B2=bar(gB,110,S2);
+  const note=el('text',{x:120,y:180,'font-size':12.5,fill:GREY},s);
+  function upd(){const a=+document.getElementById('ageA').value,b=+document.getElementById('ageB').value;
+    document.getElementById('ageAv').textContent=a;document.getElementById('ageBv').textContent=b;
+    const wa=qbps(a)/(1e4-qbps(a)),wb=qbps(b)/(1e4-qbps(b));const pa=wa/(wa+wb),pb=1-pa;
+    A.lab.textContent='A · '+a;B2.lab.textContent='B · '+b;
+    const wA=Math.max(4,pa*240),wB=Math.max(4,pb*240);
+    A.g.querySelector('rect').setAttribute('width',wA);B2.g.querySelector('rect').setAttribute('width',wB);
+    A.val.setAttribute('x',128+wA);B2.val.setAttribute('x',128+wB);
+    A.val.textContent=(pa*100).toFixed(1)+'%';B2.val.textContent=(pb*100).toFixed(1)+'%';
+    note.textContent=`annual q: ${(qbps(a)/100).toFixed(2)}% vs ${(qbps(b)/100).toFixed(2)}% → weights q/(1−q), equal stakes`;}
+  ['ageA','ageB'].forEach(id=>document.getElementById(id).addEventListener('input',upd));upd();})();
+
+/* ————— slide 11: estate stacked bar + rate steps ————— */
+(()=>{const w=470,h=120,s=svgIn('estateViz',w,h);
+  const segs=[['Finder 2.0%',.02,S1],['Family 29.4%',.294,S3],['Circle 68.6%',.686,S2]];let x=20;
+  segs.forEach(([n,f,c])=>{const ww=f*(w-40);const r=el('rect',{x,y:34,width:Math.max(ww-2,2),height:40,rx:5,fill:c},s);
+    r.addEventListener('mousemove',e=>showTip(e.clientX,e.clientY,n));r.addEventListener('mouseleave',hideTip);
+    if(f>.12){const t=el('text',{x:x+ww/2,y:59,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#fff'},s);t.textContent=n;}
+    x+=ww;});
+  const cap=el('text',{x:20,y:100,'font-size':12.5},s);cap.textContent='estate of 0.60 xDAI, settled 2026-07-15 on Gnosis — tx public, split mechanical';})();
+(()=>{const w=470,h=230,P={l:56,r:16,t:14,b:36},s=svgIn('rateViz',w,h);
+  const bands=[[55,4],[60,5],[65,5.6],[70,6.5],[75,8],[80,10],[85,13],[90,18],[96,18]];
+  const X=a=>P.l+(a-55)/(96-55)*(w-P.l-P.r),Y=v=>h-P.b-(v/20)*(h-P.t-P.b);
+  for(let v=0;v<=20;v+=5){el('line',{x1:P.l,y1:Y(v),x2:w-P.r,y2:Y(v),stroke:PAPER2},s);
+    const t=el('text',{x:P.l-8,y:Y(v)+4,'text-anchor':'end','font-size':11},s);t.textContent=v+'%';}
+  [55,65,75,85,95].forEach(a=>{const t=el('text',{x:X(a),y:h-12,'text-anchor':'middle','font-size':11},s);t.textContent=a;});
+  let d='';bands.forEach(([a,v],i)=>{const nx=bands[i+1]?bands[i+1][0]:96;
+    d+=(i?'L':'M')+X(a)+' '+Y(v)+' L'+X(nx)+' '+Y(v)+' ';});
+  el('path',{d,fill:'none',stroke:S1,'stroke-width':2.5},s);
+  [[60,5],[70,6.5],[80,10],[90,18]].forEach(([a,v])=>{const t=el('text',{x:X(a)+6,y:Y(v)-8,'font-size':11.5,'font-weight':700,fill:S1},s);t.textContent=v+'%';});})();
+
+/* ————— slide 13: trust meters ————— */
+(()=>{const rows=[
+ ['Demo Groth16 verifier accepts practice proofs','deployment gap — real circuits drop in per blueprint',95,'high'],
+ ['DKIM registry owner & guardian (which institutions count)','trusted set; EOA today → timelocked multisig',75,'high'],
+ ['Your mail provider signs honestly (DKIM)','same assumption as password resets for your bank',55,'medium'],
+ ['Mailbox custody = identity custody (heirs)','nonce + bounty race make fraud costly, not impossible',50,'medium'],
+ ['Email substrate covers the death','uneven; presumed-death path backstops it, slowly',40,'medium'],
+ ['sDAI vault & Gnosis bridge solvency','audited, 3 yrs on mainnet, systemic not specific',30,'low'],
+ ['Gnosis Chain consensus & liveness','the base layer everything above shares',15,'low']];
+ const host=document.getElementById('trustViz');
+ rows.forEach(([t,d,v])=>{const div=document.createElement('div');div.style.cssText='display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:center;margin-bottom:11px';
+  div.innerHTML=`<div><div style="font-weight:700;font-size:14.5px">${t}</div><div style="color:var(--grey);font-size:12.5px">${d}</div></div>
+  <div class="meter" title="trust required: ${v}/100"><i style="width:${v}%;background:${v>65?'#EA5817':v>35?'#f0913f':'#12876B'}"></i></div>`;
+  host.appendChild(div);});
+ const cap=document.createElement('div');cap.style.cssText='font-size:12px;color:var(--grey);text-align:right';cap.textContent='bar = how much trust the assumption carries today (longer = more)';host.appendChild(cap);})();
+</script>
+</body>
+</html>
