@@ -39,9 +39,10 @@ export function TxStatus({
 
 export function fmtXdai(shares: bigint | undefined, decimals = 2): string {
   if (shares === undefined) return "—"
-  return Number(formatUnits(shares, 18)).toLocaleString(undefined, {
-    maximumFractionDigits: decimals,
-  })
+  const n = Number(formatUnits(shares, 18))
+  // Small demo amounts must not round to a misleading "0".
+  const digits = n > 0 && n < 1 ? 4 : decimals
+  return n.toLocaleString(undefined, { maximumFractionDigits: digits })
 }
 
 export function fmtCountdown(target: number | undefined): string {
